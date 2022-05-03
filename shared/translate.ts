@@ -2,13 +2,72 @@ import { GhIssue } from "./github";
 
 const maxIssueDescriptionLength = 65000;
 
+function escapeCarrot(d: string): string {
+    let index = 0;
+    while (d.indexOf(">", index) > -1) {
+        d = d.replace(">", "\\>");
+        index = d.indexOf(">", index) + 2;
+    }
+
+    return d;
+}
+
+function parseLists(d: string): string {
+    let curIndex = 0;
+    while (curIndex > -1) {
+        while (curIndex < d.length && d[curIndex] == " " || d[curIndex] == "\n") {
+            curIndex++;
+        }
+        if (curIndex < d.length-1 && d[curIndex] == "#" && d[curIndex+1] == " ") {
+            return `${escapeCarrot(d.slice(0, curIndex))}- ${parseLists(d.slice(curIndex+2))}`;
+        }
+        curIndex = d.indexOf("\n", curIndex);
+    }
+
+    return escapeCarrot(d);
+}
+
+function parseBold(d: string): string {
+    const start = d.indexOf("{*}");
+    const endOfLine = d.indexOf("\n", start);
+    const endOfBlock = d.indexOf("{*}", start);
+    if (start > -1 && (endOfBlock < endOfLine || endOfLine < 0) && endOfBlock > -1) {
+        return `${parseLists(d.slice(0, start))}_${d.slice(start+1, endOfBlock)}_${parseBold(d.slice(endOfBlock+3))}`
+    }
+
+    return parseLists(d);
+}
+
+function parseItalics(d: string): string {
+    const start = d.indexOf("{_}");
+    const endOfLine = d.indexOf("\n", start);
+    const endOfBlock = d.indexOf("{_}", start);
+    if (start > -1 && (endOfBlock < endOfLine || endOfLine < 0) && endOfBlock > -1) {
+        return `${parseBold(d.slice(0, start))}_${d.slice(start+1, endOfBlock)}_${parseUnderline(d.slice(endOfBlock+3))}`
+    }
+
+    return parseBold(d);
+}
+
+// Markdown doesn't have underline, so we'll just go with bold
+function parseUnderline(d: string): string {
+    const start = d.indexOf("+");
+    const endOfLine = d.indexOf("\n", start);
+    const endOfBlock = d.indexOf("+", start);
+    if (start > -1 && (endOfBlock < endOfLine || endOfLine < 0) && endOfBlock > -1) {
+        return `${parseItalics(d.slice(0, start))}**${d.slice(start+1, endOfBlock)}**${parseUnderline(d.slice(endOfBlock+1))}`
+    }
+
+    return parseItalics(d);
+}
+
 function fixLinks(d: string): string {
     const start = d.indexOf("[");
     const endOfLine = d.indexOf("\n", start);
     const endOfLink = d.indexOf("]", start);
     const delimiter = d.indexOf("|", start);
     
-    if (start > -1 && endOfLink < endOfLine && endOfLink > -1) {
+    if (start > -1 && (endOfLink < endOfLine || endOfLine < 0) && endOfLink > start) {
         let link = d.slice(start+1, endOfLink);
         let caption = link;
         if (delimiter > -1 && delimiter < endOfLink) {
@@ -16,22 +75,40 @@ function fixLinks(d: string): string {
             link = d.slice(delimiter+1, endOfLink);
         }
         if (link.indexOf("://") > -1) {
-            return `${d.slice(0, start)}[${caption}](${link})${fixLinks(d.slice(endOfLink+1))}`;
+            return `${parseUnderline(d.slice(0, start))}[${caption}](${link})${fixLinks(d.slice(endOfLink+1))}`;
         }
     }
     
-    return d;
+    return parseUnderline(d);
 }
 
 function parseCodeLines(d: string): string {
-    const start = d.indexOf("{");
+    const start = d.indexOf("{{");
     const endOfLine = d.indexOf("\n", start);
-    const endOfBlock = d.indexOf("}", start);
-    if (start > -1 && endOfBlock < endOfLine && endOfBlock > -1) {
-        return `${fixLinks(d.slice(0, start))}\n\`${d.slice(start+1, endOfBlock)}\`${parseCodeLines(d.slice(endOfBlock+1))}`
+    const endOfBlock = d.indexOf("}}", start);
+    if (start > -1 && (endOfBlock < endOfLine || endOfLine < 0) && endOfBlock > -1) {
+        return `${fixLinks(d.slice(0, start))}\`${d.slice(start+2, endOfBlock)}\`${parseCodeLines(d.slice(endOfBlock+2))}`
     }
 
     return fixLinks(d);
+}
+
+function parseNoFormatBlocks(d: string): string {
+    const start = d.indexOf("{noformat}");
+    const nextOccurence = d.indexOf("{noformat}", start + 10);
+    if (start > 0 && nextOccurence > 0) {
+        let codeBlock = d.slice(start + "{noformat}".length, nextOccurence);
+        // Jira wraps single line code blocks, GH doesn't - this adds some (dumb) formatting
+        let curIndex = 100;
+        while (codeBlock.indexOf(" ", curIndex) > -1) {
+            curIndex = codeBlock.indexOf(" ", curIndex);
+            codeBlock = codeBlock.slice(0, curIndex) + "\n" + codeBlock.slice(curIndex+1);
+            curIndex += 100;
+        }
+        return `${parseCodeLines(d.slice(0, start))}\`\`\`\n${codeBlock}\n\`\`\`\n${parseCodeBlocks(d.slice(nextOccurence + "{noformat}".length))}`
+    }
+
+    return parseCodeLines(d);
 }
 
 function parseCodeBlocks(d: string): string {
@@ -47,10 +124,10 @@ function parseCodeBlocks(d: string): string {
             codeBlock = codeBlock.slice(0, curIndex) + "\n" + codeBlock.slice(curIndex+1);
             curIndex += 100;
         }
-        return `${parseCodeLines(d.slice(0, start))}\`\`\`\n${codeBlock}\n\`\`\`\n${parseCodeBlocks(d.slice(nextOccurence + "{code}".length))}`
+        return `${parseNoFormatBlocks(d.slice(0, start))}\`\`\`\n${codeBlock}\n\`\`\`\n${parseCodeBlocks(d.slice(nextOccurence + "{code}".length))}`
     }
 
-    return parseCodeLines(d);
+    return parseNoFormatBlocks(d);
 }
 
 function truncate(d: string): string {
@@ -83,8 +160,16 @@ function jiraToGhIssue(jira: any): GhIssue {
     }
 
     issue.Description = formatDescription(jira['Description']);
+    // if (issue.Title == "Beam x-lang Dataflow tests failing due to _InactiveRpcError") {
+    //     throw new Error(jira["Description"])
+    //     // throw new Error(issue.Description);
+    // }
     issue.Description += `\n\nImported from Jira [${jira['Issue key']}](https://issues.apache.org/jira/browse/${jira['Issue key']}). Original Jira may contain additional context.`;
     issue.Description += `\nReported by: ${jira['Reporter']}.`;
+    if (jira['Inward issue link (Cloners)']) {
+        issue.Description += "\nThis issue has child subcomponents which were not migrated over. See the original Jira for more information.";
+    }
+
     issue.Assignee = mapAssigneeToHandle(jira['Assignee']);
 
     // TODO - remove this when ready to assign for real
@@ -94,7 +179,7 @@ function jiraToGhIssue(jira: any): GhIssue {
 }
 
 export function jirasToGitHubIssues(jiras: any[]): GhIssue[] {
-    return jiras.map(j => jiraToGhIssue(j));
+    return jiras.filter(j => j["Issue Type"] != "Sub-task").filter(j => j['Summary'].indexOf("Beam Dependency Update Request:") < 0).map(j => jiraToGhIssue(j));
 }
 
 function mapAssigneeToHandle(assignee: string): string {
