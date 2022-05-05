@@ -4,7 +4,9 @@ const { createIssues } = require('./shared/github');
 
 async function run(githubToken: string) {
     const jiras = await getJiras();
+    console.log("Translating jiras to issues");
     const issues = jirasToGitHubIssues(jiras);
+    console.log(`Found ${issues.length} issues to be created`);
     await createIssues(issues, githubToken);
 }
 

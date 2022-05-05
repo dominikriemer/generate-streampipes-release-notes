@@ -2,14 +2,30 @@ import { GhIssue } from "./github";
 
 const maxIssueDescriptionLength = 65000;
 
-function escapeCarrot(d: string): string {
-    let index = 0;
-    while (d.indexOf(">", index) > -1) {
-        d = d.replace(">", "\\>");
-        index = d.indexOf(">", index) + 2;
+function parseQuote(d: string): string {
+    let startIndex = d.indexOf("{quote}");
+    if (startIndex <= -1) {
+        return d;
+    }
+    d = d.substring(0, startIndex) + "> " + d.substring(startIndex + "{quote}".length);
+    let endIndex = d.indexOf("{quote}");
+    if (endIndex > -1) {
+        d = d.substring(0, endIndex) + d.substring(endIndex + "{quote}".length);
+    } else {
+        endIndex = d.length + 100;
+    }
+    let index = d.indexOf("\n", startIndex);
+    while (index < endIndex && index > -1) {
+        console.log(d, index, d.length);
+        d = d.substring(0, index) + "\n> " + d.substring(index + "\n> ".length);
+        index = d.indexOf("\n", index+"\n> ".length);
     }
 
-    return d;
+    return parseQuote(d);
+}
+
+function escapeCarrot(d: string): string {
+    return parseQuote(d.replace(/>/g, "\\>"));
 }
 
 function parseLists(d: string): string {
@@ -67,7 +83,11 @@ function fixLinks(d: string): string {
     const endOfLink = d.indexOf("]", start);
     const delimiter = d.indexOf("|", start);
     
-    if (start > -1 && (endOfLink < endOfLine || endOfLine < 0) && endOfLink > start) {
+    if (start > -1 && endOfLink > start) {
+        if (endOfLink > endOfLine && endOfLine > -1) {
+            // Potential link spans multiple lines, move on to looking in next line.
+            return `${parseUnderline(d.slice(0, endOfLine + 1))}${fixLinks(d.slice(endOfLine+1))}`;
+        }
         let link = d.slice(start+1, endOfLink);
         let caption = link;
         if (delimiter > -1 && delimiter < endOfLink) {
@@ -77,9 +97,31 @@ function fixLinks(d: string): string {
         if (link.indexOf("://") > -1) {
             return `${parseUnderline(d.slice(0, start))}[${caption}](${link})${fixLinks(d.slice(endOfLink+1))}`;
         }
+
+        // No valid link, continue looking in rest of description.
+        return `${parseUnderline(d.slice(0, endOfLink + 1))}${fixLinks(d.slice(endOfLink+1))}`;
     }
-    
+
     return parseUnderline(d);
+}
+
+function parseHeaders(d: string): string {
+    const headerToMarkdown = {
+        "h1.": "#",
+        "h2.": "##",
+        "h3.": "###",
+        "h4.": "####",
+        "h5.": "#####"
+    }
+    for (const header of Object.keys(headerToMarkdown)) {
+        if (d.indexOf(header) == 0) {
+            d = headerToMarkdown[header] + d.slice(header.length);
+        }
+        while (d.indexOf(`\n${header}`) > -1) {
+            d = d.replace(`\n${header}`, `\n${headerToMarkdown[header]}`)
+        }
+    }
+    return fixLinks(d)
 }
 
 function parseCodeLines(d: string): string {
@@ -87,16 +129,16 @@ function parseCodeLines(d: string): string {
     const endOfLine = d.indexOf("\n", start);
     const endOfBlock = d.indexOf("}}", start);
     if (start > -1 && (endOfBlock < endOfLine || endOfLine < 0) && endOfBlock > -1) {
-        return `${fixLinks(d.slice(0, start))}\`${d.slice(start+2, endOfBlock)}\`${parseCodeLines(d.slice(endOfBlock+2))}`
+        return `${parseHeaders(d.slice(0, start))}\`${d.slice(start+2, endOfBlock)}\`${parseCodeLines(d.slice(endOfBlock+2))}`
     }
 
-    return fixLinks(d);
+    return parseHeaders(d);
 }
 
 function parseNoFormatBlocks(d: string): string {
     const start = d.indexOf("{noformat}");
     const nextOccurence = d.indexOf("{noformat}", start + 10);
-    if (start > 0 && nextOccurence > 0) {
+    if (start > -1 && nextOccurence > -1) {
         let codeBlock = d.slice(start + "{noformat}".length, nextOccurence);
         // Jira wraps single line code blocks, GH doesn't - this adds some (dumb) formatting
         let curIndex = 100;
@@ -115,7 +157,7 @@ function parseCodeBlocks(d: string): string {
     const start = d.indexOf("{code");
     const end = d.indexOf("}", start);
     const nextOccurence = d.indexOf("{code}", end);
-    if (start > 0 && end > 0 && nextOccurence > 0) {
+    if (start > -1 && end > -1 && nextOccurence > -1) {
         let codeBlock = d.slice(end+1, nextOccurence);
         // Jira wraps single line code blocks, GH doesn't - this adds some (dumb) formatting
         let curIndex = 100;
@@ -154,13 +196,16 @@ function jiraToGhIssue(jira: any): GhIssue {
         if (jira[`Component${i}`]) {
             issue.Labels.add(jira[`Component${i}`].toLowerCase());
         }
+        if (jira[`Label${i}`]) {
+            issue.Labels.add(jira[`Label${i}`].toLowerCase());
+        }
     }
     if (jira['Status'] === 'Triage Needed') {
         issue.Labels.add('awaiting triage');
     }
 
     issue.Description = formatDescription(jira['Description']);
-    // if (issue.Title == "Beam x-lang Dataflow tests failing due to _InactiveRpcError") {
+    // if (issue.Title == "Bigquery import/export should transfer dataflow labels to load job") {
     //     throw new Error(jira["Description"])
     //     // throw new Error(issue.Description);
     // }

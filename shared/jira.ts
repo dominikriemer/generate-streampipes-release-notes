@@ -14,9 +14,14 @@ function formatDate(d: Date): string {
 
 function parseJiraCsv(csv: string): any[] {
     let i = 0;
-    // Since multiple component columns could exist, give them unique names so the parser can handle them.
+    // Since multiple component and/or label columns could exist, give them unique names so the parser can handle them.
     while (csv.indexOf("Component/s,") > -1) {
         csv = csv.replace("Component/s,", `Component${i},`);
+        i++;
+    }
+    i = 0;
+    while (csv.indexOf("Labels,") > -1) {
+        csv = csv.replace("Labels,", `Label${i},`);
         i++;
     }
     return parse(csv, {
@@ -40,8 +45,6 @@ export async function getJiras() {
             break;
         }
         jiras = jiras.concat(parseJiraCsv(csv));
-
-        return jiras;
     }
     curStart.setDate(curStart.getDate() - (365*50));
     const issues = await hc.get(`https://issues.apache.org/jira/sr/jira.issueviews:searchrequest-csv-all-fields/temp/SearchRequest.json?jqlQuery=project+%3D+BEAM+AND+resolution+%3D+Unresolved+AND+created+%3E%3D+${formatDate(curStart)}+AND+created+%3C%3D+${formatDate(curEnd)}+ORDER+BY+priority+DESC%2C+updated+DESC`)
@@ -49,5 +52,5 @@ export async function getJiras() {
     if (csv.length !== 0) {
         jiras = jiras.concat(parseJiraCsv(csv));
     }
-    return jiras;
+    return jiras.reverse();
 }
