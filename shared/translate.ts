@@ -24,7 +24,9 @@ function parseQuote(d: string): string {
     return parseQuote(d);
 }
 
-function escapeCarrot(d: string): string {
+function escapeSpecialChars(d: string): string {
+    d = d.replace(/=/g, "\\=");
+    d = d.replace(/-/g, "\\-");
     return parseQuote(d.replace(/>/g, "\\>"));
 }
 
@@ -35,12 +37,12 @@ function parseLists(d: string): string {
             curIndex++;
         }
         if (curIndex < d.length-1 && d[curIndex] == "#" && d[curIndex+1] == " ") {
-            return `${escapeCarrot(d.slice(0, curIndex))}- ${parseLists(d.slice(curIndex+2))}`;
+            return `${escapeSpecialChars(d.slice(0, curIndex))}- ${parseLists(d.slice(curIndex+2))}`;
         }
         curIndex = d.indexOf("\n", curIndex);
     }
 
-    return escapeCarrot(d);
+    return escapeSpecialChars(d);
 }
 
 function parseBold(d: string): string {
