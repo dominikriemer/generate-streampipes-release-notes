@@ -16,7 +16,6 @@ function parseQuote(d: string): string {
     }
     let index = d.indexOf("\n", startIndex);
     while (index < endIndex && index > -1) {
-        console.log(d, index, d.length);
         d = d.substring(0, index) + "\n> " + d.substring(index + "\n> ".length);
         index = d.indexOf("\n", index+"\n> ".length);
     }
@@ -25,8 +24,8 @@ function parseQuote(d: string): string {
 }
 
 function escapeSpecialChars(d: string): string {
-    d = d.replace(/=/g, "\\=");
-    d = d.replace(/-/g, "\\-");
+    d = d.replace(/==/g, "\\==");
+    d = d.replace(/--/g, "\\--");
     return parseQuote(d.replace(/>/g, "\\>"));
 }
 
@@ -218,6 +217,7 @@ function jiraToGhIssue(jira: any): GhIssue {
     }
 
     issue.Assignee = mapAssigneeToHandle(jira['Assignee']);
+    issue.JiraReferenceId = jira['Issue id']
 
     // TODO - remove this when ready to assign for real
     issue.Assignee = 'damccorm';
@@ -226,7 +226,16 @@ function jiraToGhIssue(jira: any): GhIssue {
 }
 
 export function jirasToGitHubIssues(jiras: any[]): GhIssue[] {
-    return jiras.filter(j => j["Issue Type"] != "Sub-task").filter(j => j['Summary'].indexOf("Beam Dependency Update Request:") < 0).map(j => jiraToGhIssue(j));
+    const filteredJiras = jiras.filter(j => j["Issue Type"] != "Sub-task").filter(j => j['Summary'].indexOf("Beam Dependency Update Request:") < 0);
+    const subTasks = jiras.filter(j => j["Issue Type"] == "Sub-task");
+    let issues: GhIssue[] = [];
+    for (const jira of filteredJiras) {
+        let issue = jiraToGhIssue(jira);
+        issue.Children = subTasks.filter(t => t['Parent id'] == jira['Issue id']).map(t => jiraToGhIssue(t));
+        issues.push(issue);
+    }
+
+    return issues
 }
 
 function mapAssigneeToHandle(assignee: string): string {

@@ -5,7 +5,8 @@
   "main": "index.js",
   "scripts": {
     "build": "tsc",
-    "exec": "tsc && node lib/index.js"
+    "exec": "tsc && node lib/index.js",
+    "clean": "rm -r repo-state"
   },
   "repository": {
     "type": "git",

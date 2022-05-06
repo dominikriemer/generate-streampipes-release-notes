@@ -6,8 +6,8 @@ async function run(githubToken: string) {
     const jiras = await getJiras();
     console.log("Translating jiras to issues");
     const issues = jirasToGitHubIssues(jiras);
-    console.log(`Found ${issues.length} issues to be created`);
-    await createIssues(issues, githubToken);
+    console.log(`Found ${issues.length} issues to be created, with an additional ${issues.reduce((acc, i) => i.Children.length + acc, 0)} subtasks.`);
+    await createIssues(issues.filter(i => i.Children.length > 0), githubToken);
 }
 
 const githubToken = process.env['GITHUB_TOKEN'];

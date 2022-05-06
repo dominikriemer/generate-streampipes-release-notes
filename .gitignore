@@ -34,5 +34,8 @@ Thumbs.db
 # Ignore built js files
 lib/**/*
 
+# Ignore the saved repo state
+repo-state/**/*
+
 # ignore yarn.lock
 yarn.lock
