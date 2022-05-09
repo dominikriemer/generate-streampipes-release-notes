@@ -187,6 +187,17 @@ function formatDescription(d: string): string {
     return d;
 }
 
+function validLabel(l): boolean {
+    if (!l || l.length <= 0) {
+        return false;
+    }
+    if (l.indexOf(',') > -1) {
+        return false;
+    }
+
+    return true;
+}
+
 function jiraToGhIssue(jira: any): GhIssue {
     let issue = new GhIssue();
     issue.Title = jira['Summary'];
@@ -194,10 +205,10 @@ function jiraToGhIssue(jira: any): GhIssue {
     issue.Labels.add(jira['Issue Type'].toLowerCase());
     issue.Labels.add(jira['Priority'].toUpperCase());
     for (let i = 0; i < 10; i++) {
-        if (jira[`Component${i}`]) {
+        if (validLabel(jira[`Component${i}`])) {
             issue.Labels.add(jira[`Component${i}`].toLowerCase());
         }
-        if (jira[`Label${i}`]) {
+        if (validLabel(jira[`Label${i}`])) {
             issue.Labels.add(jira[`Label${i}`].toLowerCase());
         }
     }
