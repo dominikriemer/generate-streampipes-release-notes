@@ -390,8 +390,8 @@ function mapAssigneeToHandle(assignee: string): string {
         case "marroble":
             return "MarcoRob";
         case "elizaveta.lomteva":
-            return "";
+            return "Lizzfox";
     }
 
-    return ""
+    return "";
 }
