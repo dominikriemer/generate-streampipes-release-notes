@@ -1,10 +1,11 @@
 const { Octokit } = require("@octokit/rest");
 const fs = require('fs');
 
-const owner = 'damccorm';
-const repo = 'test-migration-target';
+const owner = 'apache';
+const repo = 'beam';
 const stateDir = `./repo-state/${owner}/${repo}`;
 const stateFile = `${stateDir}/alreadyCreated.txt`;
+const mappingFile = `${stateDir}/mapping.txt`;
 
 export class GhIssue {
     public Title: string;
@@ -84,7 +85,8 @@ async function createIssue(issue: GhIssue, client: any, retry: number = 0, paren
             console.log("Trying again");
             return await createIssue(issue, client, retry+1, parent);
         } else if (resp.status < 210) {
-            console.log(`Created issue: ${resp.data.title}`);
+            console.log(`Issue #${resp.data.number} maps to ${issue.JiraReferenceId}`);
+            fs.appendFileSync(mappingFile, `${resp.data.number}: ${issue.JiraReferenceId}`);
             let issueNumbers: number[] = []
             for (const child of issue.Children) {
                 issueNumbers.push(await createIssue(child, client, 0, resp.data.number));
