@@ -1,5 +1,6 @@
 const { Octokit } = require("@octokit/rest");
 const fs = require('fs');
+const fetch = require('node-fetch');
 
 const owner = 'apache';
 const repo = 'beam';
@@ -60,6 +61,23 @@ async function commentWithSubtasks(issueNumber: number, client: any, childNumber
     }
 }
 
+async function addMapping(issueNumber, jiraReference) {
+    var bodyData = `{
+    "body": "This issue has been migrated to https://github.com/apache/beam/issues/${issueNumber}"
+    }`;
+    await fetch(`https://issues.apache.org/jira/rest/api/2/issue/${jiraReference}/comment`, {
+    method: 'POST',
+    headers: {
+        'Authorization': `Basic ${Buffer.from(
+        `${process.env['JIRA_USERNAME']}:${process.env['JIRA_PASSWORD']}`
+        ).toString('base64')}`,
+        'Accept': 'application/json',
+        'Content-Type': 'application/json'
+    },
+    body: bodyData
+    })
+}
+
 async function createIssue(issue: GhIssue, client: any, retry: number = 0, parent: number = -1): Promise<number> {
     let description = issue.Description;
     if (parent != -1) {
@@ -86,7 +104,17 @@ async function createIssue(issue: GhIssue, client: any, retry: number = 0, paren
             return await createIssue(issue, client, retry+1, parent);
         } else if (resp.status < 210) {
             console.log(`Issue #${resp.data.number} maps to ${issue.JiraReferenceId}`);
-            fs.appendFileSync(mappingFile, `${resp.data.number}: ${issue.JiraReferenceId}`);
+            fs.appendFileSync(mappingFile, `${resp.data.number}: ${issue.JiraReferenceId}\n`);
+            try {
+                await addMapping(resp.data.number, issue.JiraReferenceId)
+            } catch {
+                try {
+                    await addMapping(resp.data.number, issue.JiraReferenceId)
+                } catch {
+                    console.log(`Failed to record migration of ${issue.JiraReferenceId} to issue number${resp.data.number}`);
+                    fs.appendFileSync(mappingFile, `Previous line failed to be recorded in jira\n`);
+                }
+            }
             let issueNumbers: number[] = []
             for (const child of issue.Children) {
                 issueNumbers.push(await createIssue(child, client, 0, resp.data.number));

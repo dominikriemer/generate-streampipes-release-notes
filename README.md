@@ -8,7 +8,9 @@ To use the tool:
 3. Update the jira link in [shared/jira.ts](https://github.com/damccorm/jira-to-issues/blob/cf416753af0982a845a27666e5dd55f0f2c30cf8/shared/jira.ts#L40) to generate a csv containing issues you would like migrated. Right now, it is set to migrate open issues in the Beam Jira.
 4. Create a PAT with repo/issue access to your target repo. This can be done from https://github.com/settings/tokens/new
 5. Set your token in an environment variable `GITHUB_TOKEN`: `export GITHUB_TOKEN=<PAT>`
-6. Run `npm install`
-7. Run `npm run exec`
+6. Set your JIRA username in an environment variable `JIRA_USERNAME`: `export JIRA_USERNAME=<username>`
+7. Set your JIRA password in an environment variable `JIRA_PASSWORD`: `export JIRA_PASSWORD=<password>`
+8. Run `npm install`
+9. Run `npm run exec`
 
 As long as you use the existing repo that you've cloned, the `exec` operation is resumable. So if you run into any issues during migration (e.g. your computer randomly restarts), you can resume the migration by running `npm run exec` again without risking duplicate issues.

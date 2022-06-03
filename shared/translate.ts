@@ -188,6 +188,23 @@ function formatDescription(d: string): string {
 }
 
 function validLabel(l): boolean {
+    const labelExclusionList = [
+        "apache", "apache-beam", "beam", "beam-playground-sprint-6", 
+        "bigdata", "c4", "calcite", "clarified", "classcastexception",
+        "cloud", "couchbase", "datastore", "doc-cleanup", "done", "eos",
+        "error_message_improvement", "file-component", "findbugs",
+        "flinkrunner", "full-time", "gcs_task_handler", "gcs", "go",
+        "golang", "google-cloud-spanner", "grouping", "interrupts",
+        "io", "java", "javadoc", "kinesis", "kubernetes", "log4j",
+        "log-aggregation", "maven", "metrics", "mongodb", "mqtt", "mysql",
+        "node.js", "nullability", "offset", "oom", "options", "oracle",
+        "outreachy19dec", "part-time", "patch", "py-interrupts", "python",
+        "python3", "python-conversion", "python-sqltransform", "redis",
+        "requirements", "restful", "runner", "savepoints", "schema", "schema-io",
+        "sdk-consistency", "sdk-feature-parity", "security", "serialization",
+        "session", "sideinput", "slf4j", "snowflake", "spring-boot", "sslexception",
+        "state", "t5", "tensorflow", "tensorflow-datasets", "tfs+beam", "thrift",
+        "triggers", "update", "watermark", "windowing"]
     if (!l || l.length <= 0) {
         return false;
     }
@@ -195,7 +212,93 @@ function validLabel(l): boolean {
         return false;
     }
 
+    if (labelExclusionList.indexOf(l) > -1) {
+        return false;
+    }
+
+    console.log('Found valid label ' + l)
+
     return true;
+}
+
+function getLabel(l): string {
+    switch (l) {
+        case "backwards-incompatible":
+            return "backward-incompatible"
+        case "aws-sdk-v1":
+        case "aws-sdk-v2":
+        case "sqs":
+            return "aws"
+        case "benchmarking-py":
+            return "benchmark"
+        case "build":
+            return "build-system"
+        case "cdap-io-sprint-1":
+        case "cdap-io-sprint-2":
+        case "cdap-io-sprint-3":
+        case "cdap-io-sprint-4":
+            return "cdap-io"
+        case "dataflow-runner-v2":
+        case "google-cloud-dataflow":
+        case "google-dataflow":
+            return "dataflow"
+        case "document":
+        case "documentaion":
+            return "documentation"
+        case "feature-request":
+        case "features":
+            return "new feature"
+        case "flake":
+        case "flaky-test":
+        case "flakey":
+        case "currently-failing":
+            return "flaky"
+        case "gcp-quota":
+            return "gcp"
+        case "gsoc2017":
+        case "gsoc2018":
+        case "gsoc2019":
+        case "gsoc2020":
+        case "gsoc2021":
+        case "gsoc2022":
+            return "gsoc"
+        case "gsod2019":
+        case "gsod2022":
+            return "gsod"
+        case "infra":
+            return "infrastructure"
+        case "jdbc_connector":
+            return "jdbcio"
+        case "kafkaio":
+            return "kafka"
+        case "easy":
+        case "easyfix":
+        case "beginner":
+        case "newbie":
+        case "starter":
+        case "starer":
+            return "good first issue"
+        case "pubsubio":
+        case "pubsubliteio":
+            return "pubsub"
+        case "sql-engine":
+            return "sql"
+        case "stale-assigned":
+            return "stale"
+        case "test-fail":
+        case "test-failure":
+            return "test-failures"
+        case "test-framework":
+        case "test-patch":
+        case "test-stability":
+        case "test":
+        case "testlabel":
+        case "tests":
+            return "testing"
+        case "website-revamp-2020":
+            return "website"
+    }
+    return l
 }
 
 function jiraToGhIssue(jira: any): GhIssue {
@@ -206,10 +309,10 @@ function jiraToGhIssue(jira: any): GhIssue {
     issue.Labels.add(jira['Priority'].toUpperCase());
     for (let i = 0; i < 10; i++) {
         if (validLabel(jira[`Component${i}`])) {
-            issue.Labels.add(jira[`Component${i}`].toLowerCase());
+            issue.Labels.add(getLabel(jira[`Component${i}`].toLowerCase()));
         }
         if (validLabel(jira[`Label${i}`])) {
-            issue.Labels.add(jira[`Label${i}`].toLowerCase());
+            issue.Labels.add(getLabel(jira[`Label${i}`].toLowerCase()));
         }
     }
     if (jira['Status'] === 'Triage Needed') {
@@ -229,9 +332,6 @@ function jiraToGhIssue(jira: any): GhIssue {
 
     issue.Assignee = mapAssigneeToHandle(jira['Assignee']);
     issue.JiraReferenceId = jira['Issue id']
-
-    // TODO - remove this when ready to assign for real
-    issue.Assignee = 'damccorm';
 
     return issue;
 }
