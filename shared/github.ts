@@ -17,6 +17,7 @@ export class GhIssue {
     public Assignee: string;
     public JiraReferenceId: string;
     public Children: GhIssue[];
+    public Assignable: boolean;
     constructor() {
         this.Title = '';
         this.Labels = new Set();
@@ -26,6 +27,7 @@ export class GhIssue {
         this.Assignee = "";
         this.JiraReferenceId = "";
         this.Children = [];
+        this.Assignable = false;
     }
 }
 
@@ -34,20 +36,20 @@ function sleep(seconds: number): Promise<null> {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-async function commentWithSubtasks(issueNumber: number, client: any, childNumbers: number[], retry: number = 0) {
+async function addComment(issueNumber: number, client: any, body: string, retry: number = 0) {
     try {
         let resp = await client.rest.issues.createComment({
             owner: owner,
             repo: repo,
             issue_number: issueNumber,
-            body: `The following subtask(s) are associated with this issue:${childNumbers.map(n => ` #${n}`).join(',')}`,
+            body: body,
           });
         if (resp.status == 403) {
             const backoffSeconds= 60*(2**(retry));
             console.log(`Getting rate limited. Sleeping ${backoffSeconds} seconds`);
             await sleep(backoffSeconds);
             console.log("Trying again");
-            await commentWithSubtasks(issueNumber, client, childNumbers, retry+1);
+            await addComment(issueNumber, client, body, retry+1);
         } else if (resp.status > 210) {
             throw new Error(`Failed to comment on issue with status code: ${resp.status}. Full response: ${resp}`);
         }
@@ -57,7 +59,7 @@ async function commentWithSubtasks(issueNumber: number, client: any, childNumber
         console.log(`Sleeping ${backoffSeconds} seconds before retrying`);
         await sleep(backoffSeconds);
         console.log("Trying again");
-        await commentWithSubtasks(issueNumber, client, childNumbers, retry+1);
+        await addComment(issueNumber, client, body, retry+1);
     }
 }
 
@@ -84,7 +86,7 @@ async function createIssue(issue: GhIssue, client: any, retry: number = 0, paren
         description += `\nSubtask of issue #${parent}`;
     }
     let assignees: string[] = [];
-    if (issue.Assignee) {
+    if (issue.Assignee && issue.Assignable) {
         assignees.push(issue.Assignee);
     }
     try {
@@ -104,6 +106,9 @@ async function createIssue(issue: GhIssue, client: any, retry: number = 0, paren
             return await createIssue(issue, client, retry+1, parent);
         } else if (resp.status < 210) {
             console.log(`Issue #${resp.data.number} maps to ${issue.JiraReferenceId}`);
+            if (!issue.Assignable && issue.Assignee) {
+                await addComment(resp.data.number, client, `Unable to assign user @${issue.Assignee}. If able, self-assign, otherwise tag @damccorm so that he can assign you. Because of GitHub's spam prevention system, your activity is required to enable assignment in this repo.`, 0);
+            }
             fs.appendFileSync(mappingFile, `${resp.data.number}: ${issue.JiraReferenceId}\n`);
             try {
                 await addMapping(resp.data.number, issue.JiraReferenceId)
@@ -120,7 +125,7 @@ async function createIssue(issue: GhIssue, client: any, retry: number = 0, paren
                 issueNumbers.push(await createIssue(child, client, 0, resp.data.number));
             }
             if (issueNumbers.length > 0) {
-                await commentWithSubtasks(resp.data.number, client, issueNumbers, 0);
+                await addComment(resp.data.number, client, `The following subtask(s) are associated with this issue:${issueNumbers.map(n => ` #${n}`).join(',')}`, 0);
             }
             return resp.data.number;
         } else {

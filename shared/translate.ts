@@ -333,6 +333,8 @@ function jiraToGhIssue(jira: any): GhIssue {
     issue.Assignee = mapAssigneeToHandle(jira['Assignee']);
     issue.JiraReferenceId = jira['Issue id']
 
+    issue.Assignable = isAssignable(issue.Assignee, mapAssigneeToHandle(jira['Assignee']));
+
     return issue;
 }
 
@@ -494,4 +496,18 @@ function mapAssigneeToHandle(assignee: string): string {
     }
 
     return "";
+}
+
+
+
+function isAssignable(assignee: string, jiraUsername: string): boolean {
+    const assignable = [
+        "ihji", "reuvenlax", "chamikara", "lostluck", "kileys", "egalpin",
+        "emilymye", "mosche", "danoliveira", "bhulette", "pabloem", "damccorm",
+        "jbonofre", "damondouglas", "suztomo", "ibzib", "robertwb", "apilloud",
+        "lukecwik", "aromanenko-dev", "tvalentyn", "guillaumecle", "rezarokni",
+        "KevinGG", "je-ik"
+    ];
+    // Check gh handle and jira username in case I copied the wrong one
+    return (assignable.indexOf(assignee) > -1 || assignable.indexOf(jiraUsername) > -1);
 }
