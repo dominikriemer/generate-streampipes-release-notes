@@ -320,10 +320,6 @@ function jiraToGhIssue(jira: any): GhIssue {
     }
 
     issue.Description = formatDescription(jira['Description']);
-    // if (issue.Title == "Bigquery import/export should transfer dataflow labels to load job") {
-    //     throw new Error(jira["Description"])
-    //     // throw new Error(issue.Description);
-    // }
     issue.Description += `\n\nImported from Jira [${jira['Issue key']}](https://issues.apache.org/jira/browse/${jira['Issue key']}). Original Jira may contain additional context.`;
     issue.Description += `\nReported by: ${jira['Reporter']}.`;
     if (jira['Inward issue link (Cloners)']) {
