@@ -362,61 +362,46 @@ export function jirasToGitHubIssues(jiras: any[]): GhIssue[] {
 }
 
 function mapAssigneeToHandle(assignee: string): string {
+    // only PMC & committers, as others are ignored by Github spam protection
     switch (assignee) {
-        case "ajay bhat":
-            return "";
         case "bossenti":
-            return "";
+            return "bossenti";
         case "cdutz":
-            return "";
-        case "dvitorino":
-            return "";
+            return "chrisdutz";
         case "ebi":
-            return "";
-        case "faizan-d":
-            return "";
+            return "EbiDa";
         case "fjohn":
-            return "";
+            return "Madabaru";
         case "grainier":
-            return "";
-        case "hutcheb":
-            return "";
-        case "Kiryl Batsiukov":
-            return "";
+            return "grainier";
         case "mheyden":
-            return "";
+            return "heymarco";
         case "micklich":
-            return "";
-        case "MikhailGordienko":
-            return "";
-        case "milan.stojanovic.nissatech":
-            return "";
+            return "flomickl";
         case "mohanadarshan":
             return "";
         case "mohanvive":
-            return "";
+            return "mohanvive";
         case "obermeier":
-            return "";
-        case "otluk":
-            return "";
+            return "obermeier";
         case "patrickphilipp":
-            return "";
+            return "patrickraoulphilipp";
         case "patrickraoulphilipp":
-            return "";
+            return "patrickraoulphilipp";
         case "riemer":
-            return "";
+            return "dominikriemer";
         case "tex":
-            return "";
+            return "tejoha";
         case "udeho":
             return "";
         case "vesense":
-            return "";
+            return "vesense";
         case "wiener":
-            return "";
+            return "wipatrick";
         case "zehnder":
-            return "";
+            return "tenthe";
         case "zike":
-            return "";
+            return "RobertIndie";
     }
 
     return "";
