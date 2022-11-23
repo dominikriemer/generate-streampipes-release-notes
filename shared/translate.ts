@@ -203,22 +203,14 @@ function formatDescription(d: string): string {
 
 function validLabel(l): boolean {
     const labelExclusionList = [
-        "apache", "apache-beam", "beam", "beam-playground-sprint-6", 
-        "bigdata", "c4", "calcite", "clarified", "classcastexception",
-        "cloud", "couchbase", "datastore", "doc-cleanup", "done", "eos",
-        "error_message_improvement", "file-component", "findbugs",
-        "flinkrunner", "full-time", "gcs_task_handler", "gcs", "go",
-        "golang", "google-cloud-spanner", "grouping", "interrupts",
-        "io", "java", "javadoc", "kinesis", "kubernetes", "log4j",
-        "log-aggregation", "maven", "metrics", "mongodb", "mqtt", "mysql",
-        "node.js", "nullability", "offset", "oom", "options", "oracle",
-        "outreachy19dec", "part-time", "patch", "py-interrupts", "python",
-        "python3", "python-conversion", "python-sqltransform", "redis",
-        "requirements", "restful", "runner", "savepoints", "schema", "schema-io",
-        "sdk-consistency", "sdk-feature-parity", "security", "serialization",
-        "session", "sideinput", "slf4j", "snowflake", "spring-boot", "sslexception",
-        "state", "t5", "tensorflow", "tensorflow-datasets", "tfs+beam", "thrift",
-        "triggers", "update", "watermark", "windowing"]
+    "Backend", "Connect", "Pipeline Elements", "UI",
+    "Data Lake", "Documentation", "Website", "Global", "Installer",
+    "api", "ci", "client", "pull-request-available", "python",
+    "deployment", "integration-test", "docs", "AWS", "suggestion-postpone",
+    "documentation", "suggestion-outdated", "connect-worker", "plc",
+    "plc4x", "docs", "easyfix", "extensions", "features", "gsoc2021",
+    "mentor", "streampipes", "newbie", "postgres", "postgresql", "suggestion-done",
+    "website", "suggestion-wip", "user-guide", "test", "ui"]
     if (!l || l.length <= 0) {
         return false;
     }
