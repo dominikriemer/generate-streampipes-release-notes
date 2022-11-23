@@ -19,9 +19,9 @@ const { createIssues } = require('./shared/github');
 async function run(githubToken: string) {
     const jiras = await getJiras();
     console.log("Translating jiras to issues");
-    const issues = jirasToGitHubIssues(jiras);
-    console.log(`Found ${issues.length} issues to be created, with an additional ${issues.reduce((acc, i) => i.Children.length + acc, 0)} subtasks.`);
-    await createIssues(issues, githubToken);
+    //const issues = jirasToGitHubIssues(jiras);
+    //console.log(`Found ${issues.length} issues to be created, with an additional ${issues.reduce((acc, i) => i.Children.length + acc, 0)} subtasks.`);
+    //await createIssues(issues, githubToken);
 }
 
 const githubToken = process.env['GITHUB_TOKEN'];

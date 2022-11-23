@@ -51,7 +51,7 @@ export async function getJiras() {
     curStart.setDate(curStart.getDate() - batchSize);
     while (true) {
         console.log(`Getting jiras between ${formatDate(curStart)} and ${formatDate(curEnd)}`);
-        const issues = await hc.get(`https://issues.apache.org/jira/sr/jira.issueviews:searchrequest-csv-all-fields/temp/SearchRequest.json?jqlQuery=project+%3D+BEAM+AND+resolution+%3D+Unresolved+AND+created+%3E%3D+${formatDate(curStart)}+AND+created+%3C%3D+${formatDate(curEnd)}+ORDER+BY+priority+DESC%2C+updated+DESC`)
+        const issues = await hc.get(`https://issues.apache.org/jira/sr/jira.issueviews:searchrequest-csv-all-fields/temp/SearchRequest.json?jqlQuery=project+%3D+STREAMPIPES+AND+resolution+%3D+Unresolved+AND+created+%3E%3D+${formatDate(curStart)}+AND+created+%3C%3D+${formatDate(curEnd)}+ORDER+BY+priority+DESC%2C+updated+DESC`)
         const csv: string = (await issues.readBody()).trim();
         curEnd.setDate(curEnd.getDate() - batchSize - 1);
         curStart.setDate(curStart.getDate() - batchSize - 1);
@@ -61,7 +61,7 @@ export async function getJiras() {
         jiras = jiras.concat(parseJiraCsv(csv));
     }
     curStart.setDate(curStart.getDate() - (365*50));
-    const issues = await hc.get(`https://issues.apache.org/jira/sr/jira.issueviews:searchrequest-csv-all-fields/temp/SearchRequest.json?jqlQuery=project+%3D+BEAM+AND+resolution+%3D+Unresolved+AND+created+%3E%3D+${formatDate(curStart)}+AND+created+%3C%3D+${formatDate(curEnd)}+ORDER+BY+priority+DESC%2C+updated+DESC`)
+    const issues = await hc.get(`https://issues.apache.org/jira/sr/jira.issueviews:searchrequest-csv-all-fields/temp/SearchRequest.json?jqlQuery=project+%3D+STREAMPIPES+AND+resolution+%3D+Unresolved+AND+created+%3E%3D+${formatDate(curStart)}+AND+created+%3C%3D+${formatDate(curEnd)}+ORDER+BY+priority+DESC%2C+updated+DESC`)
     const csv: string = (await issues.readBody()).trim();
     if (csv.length !== 0) {
         jiras = jiras.concat(parseJiraCsv(csv));

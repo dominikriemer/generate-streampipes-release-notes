@@ -17,7 +17,7 @@ const fs = require('fs');
 const fetch = require('node-fetch');
 
 const owner = 'apache';
-const repo = 'beam';
+const repo = 'streampipes';
 const stateDir = `./repo-state/${owner}/${repo}`;
 const stateFile = `${stateDir}/alreadyCreated.txt`;
 const mappingFile = `${stateDir}/mapping.txt`;
@@ -79,7 +79,7 @@ async function addComment(issueNumber: number, client: any, body: string, retry:
 
 async function addMapping(issueNumber, jiraReference) {
     var bodyData = `{
-    "body": "This issue has been migrated to https://github.com/apache/beam/issues/${issueNumber}"
+    "body": "This issue has been migrated to https://github.com/apache/streampipes/issues/${issueNumber}"
     }`;
     await fetch(`https://issues.apache.org/jira/rest/api/2/issue/${jiraReference}/comment`, {
     method: 'POST',

@@ -2,7 +2,7 @@ const fetch = require('node-fetch');
 
 async function addMapping(issueNumber, jiraReference) {
     var bodyData = `{
-    "body": "This isn't actually real, but this issue has been migrated to https://github.com/apache/beam/issues/${issueNumber}"
+    "body": "This isn't actually real, but this issue has been migrated to https://github.com/apache/streampipes/issues/${issueNumber}"
     }`;
     await fetch(`https://issues.apache.org/jira/rest/api/2/issue/${jiraReference}/comment`, {
     method: 'POST',
@@ -17,4 +17,4 @@ async function addMapping(issueNumber, jiraReference) {
     })
 }
 
-addMapping(112, "BEAM-14441");
+//addMapping(112, "BEAM-14441");
