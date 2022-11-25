@@ -203,14 +203,8 @@ function formatDescription(d: string): string {
 
 function validLabel(l): boolean {
     const labelExclusionList = [
-    "Backend", "Connect", "Pipeline Elements", "UI",
-    "Data Lake", "Documentation", "Website", "Global", "Installer",
-    "api", "ci", "client", "pull-request-available", "python",
-    "deployment", "integration-test", "docs", "AWS", "suggestion-postpone",
-    "documentation", "suggestion-outdated", "connect-worker", "plc",
-    "plc4x", "docs", "easyfix", "extensions", "features", "gsoc2021",
-    "mentor", "streampipes", "newbie", "postgres", "postgresql", "suggestion-done",
-    "website", "suggestion-wip", "user-guide", "test", "ui"]
+      "Global", "api", "pull-request-available", "AWS", "suggestion-postpone", "suggestion-outdated",
+      "streampipes", "suggestion-done", "suggestion-wip"]
     if (!l || l.length <= 0) {
         return false;
     }
@@ -229,80 +223,50 @@ function validLabel(l): boolean {
 
 function getLabel(l): string {
     switch (l) {
-        case "backwards-incompatible":
-            return "backward-incompatible"
-        case "aws-sdk-v1":
-        case "aws-sdk-v2":
-        case "sqs":
-            return "aws"
-        case "benchmarking-py":
-            return "benchmark"
-        case "build":
-            return "build-system"
-        case "cdap-io-sprint-1":
-        case "cdap-io-sprint-2":
-        case "cdap-io-sprint-3":
-        case "cdap-io-sprint-4":
-            return "cdap-io"
-        case "dataflow-runner-v2":
-        case "google-cloud-dataflow":
-        case "google-dataflow":
-            return "dataflow"
-        case "document":
-        case "documentaion":
+        case "Backend":
+        case "Data Lake":
+            return "core"
+        case "Connect":
+        case "connect-worker":
+        case "plc":
+        case "plc4x":
+        case "Pipeline Elements":
+        case "extensions":
+        case "postgres":
+        case "postgresql":
+            return "extensions"
+        case "UI":
+        case "ui":
+            return "ui"
+        case "Documentation":
+        case "documentation":
+        case "user-guide":
+        case "docs":
             return "documentation"
-        case "feature-request":
-        case "features":
-            return "new feature"
-        case "flake":
-        case "flaky-test":
-        case "flakey":
-        case "currently-failing":
-            return "flaky"
-        case "gcp-quota":
-            return "gcp"
-        case "gsoc2017":
-        case "gsoc2018":
-        case "gsoc2019":
-        case "gsoc2020":
-        case "gsoc2021":
-        case "gsoc2022":
-            return "gsoc"
-        case "gsod2019":
-        case "gsod2022":
-            return "gsod"
-        case "infra":
-            return "infrastructure"
-        case "jdbc_connector":
-            return "jdbcio"
-        case "kafkaio":
-            return "kafka"
-        case "easy":
-        case "easyfix":
-        case "beginner":
-        case "newbie":
-        case "starter":
-        case "starer":
-            return "good first issue"
-        case "pubsubio":
-        case "pubsubliteio":
-            return "pubsub"
-        case "sql-engine":
-            return "sql"
-        case "stale-assigned":
-            return "stale"
-        case "test-fail":
-        case "test-failure":
-            return "test-failures"
-        case "test-framework":
-        case "test-patch":
-        case "test-stability":
-        case "test":
-        case "testlabel":
-        case "tests":
-            return "testing"
-        case "website-revamp-2020":
+        case "Website":
+        case "website":
             return "website"
+        case "Installer":
+            return "installer"
+        case "ci":
+        case "deployment":
+            return "gh-actions"
+        case "client":
+            return "client"
+        case "python":
+            return "python"
+        case "integration-test":
+        case "test":
+            return "testing"
+        case "newbie":
+        case "easyfix":
+            return "good first issue"
+        case "features":
+            return "enhancement"
+        case "gsoc2021":
+            return "gsoc"
+        case "mentor":
+            return "help wanted"
     }
     return l
 }
@@ -357,6 +321,7 @@ function mapAssigneeToHandle(assignee: string): string {
     // only PMC & committers, as others are ignored by Github spam protection
     switch (assignee) {
         case "bossenti":
+        case "udeho":
             return "bossenti";
         case "cdutz":
             return "chrisdutz";
@@ -370,8 +335,6 @@ function mapAssigneeToHandle(assignee: string): string {
             return "heymarco";
         case "micklich":
             return "flomickl";
-        case "mohanadarshan":
-            return "";
         case "mohanvive":
             return "mohanvive";
         case "obermeier":
@@ -384,8 +347,6 @@ function mapAssigneeToHandle(assignee: string): string {
             return "dominikriemer";
         case "tex":
             return "tejoha";
-        case "udeho":
-            return "";
         case "vesense":
             return "vesense";
         case "wiener":
@@ -403,11 +364,9 @@ function mapAssigneeToHandle(assignee: string): string {
 
 function isAssignable(assignee: string, jiraUsername: string): boolean {
     const assignable = [
-        "ihji", "reuvenlax", "chamikara", "lostluck", "kileys", "egalpin",
-        "emilymye", "mosche", "danoliveira", "bhulette", "pabloem", "damccorm",
-        "jbonofre", "damondouglas", "suztomo", "ibzib", "robertwb", "apilloud",
-        "lukecwik", "aromanenko-dev", "tvalentyn", "guillaumecle", "rezarokni",
-        "KevinGG", "je-ik"
+       "bossenti", "chrisdutz", "EbiDa", "Madabaru", "grainier", "heymarco",
+      "flomickl", "mohanvive", "obermeier", "patrickraoulphilipp", "dominikriemer",
+      "tejoha", "vesense", "wipatrick", "tenthe", "RobertIndie"
     ];
     // Check gh handle and jira username in case I copied the wrong one
     return (assignable.indexOf(assignee) > -1 || assignable.indexOf(jiraUsername) > -1);
