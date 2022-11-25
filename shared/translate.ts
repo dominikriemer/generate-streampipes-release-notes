@@ -385,7 +385,7 @@ function mapAssigneeToHandle(assignee: string): string {
         case "tex":
             return "tejoha";
         case "udeho":
-            return "";
+            return "bossenti";
         case "vesense":
             return "vesense";
         case "wiener":
