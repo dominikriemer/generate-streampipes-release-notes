@@ -262,6 +262,7 @@ function getLabel(l): string {
         case "easyfix":
             return "good first issue"
         case "features":
+        case "improvement":
             return "enhancement"
         case "gsoc2021":
             return "gsoc"
@@ -277,6 +278,7 @@ function jiraToGhIssue(jira: any): GhIssue {
 
     issue.Labels.add(jira['Issue Type'].toLowerCase());
     issue.Labels.add(jira['Priority'].toUpperCase());
+    issue.Labels.add('migrated from jira');
     for (let i = 0; i < 10; i++) {
         if (validLabel(jira[`Component${i}`])) {
             issue.Labels.add(getLabel(jira[`Component${i}`].toLowerCase()));

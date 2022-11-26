@@ -112,6 +112,7 @@ async function createIssue(issue: GhIssue, client: any, retry: number = 0, paren
             body: description,
             labels: Array.from(issue.Labels)
         });
+
         if (resp.status == 403) {
             const backoffSeconds= 60*(2**(retry));
             console.log(`Getting rate limited. Sleeping ${backoffSeconds} seconds`);
