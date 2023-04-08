@@ -50,6 +50,33 @@ function sleep(seconds: number): Promise<null> {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
 
+async function closeIssue(issueNumber: number, client: any, retry: number = 0) {
+    try {
+        let resp = await client.rest.issues.update({
+            owner: owner,
+            repo: repo,
+            issue_number: issueNumber,
+            state: 'closed'
+        });
+        if (resp.status == 403) {
+            const backoffSeconds= 60*(2**(retry));
+            console.log(`Getting rate limited. Sleeping ${backoffSeconds} seconds`);
+            await sleep(backoffSeconds);
+            console.log("Trying again");
+            await closeIssue(issueNumber, client, retry+1);
+        } else if (resp.status > 210) {
+            throw new Error(`Failed to close issue with status code: ${resp.status}. Full response: ${resp}`);
+        }
+    } catch (ex) {
+        console.log(`Failed to close issue with error : ${ex}`);
+        const backoffSeconds= 60*(2**(retry));
+        console.log(`Sleeping ${backoffSeconds} seconds before retrying`);
+        await sleep(backoffSeconds);
+        console.log("Trying again");
+        await closeIssue(issueNumber, client, retry+1);
+    }
+}
+
 async function addComment(issueNumber: number, client: any, body: string, retry: number = 0) {
     try {
         let resp = await client.rest.issues.createComment({
@@ -110,7 +137,7 @@ async function createIssue(issue: GhIssue, client: any, retry: number = 0, paren
             assignees: assignees,
             title: issue.Title,
             body: description,
-            labels: Array.from(issue.Labels)
+            labels: Array.from(issue.Labels),
         });
 
         if (resp.status == 403) {
@@ -125,6 +152,10 @@ async function createIssue(issue: GhIssue, client: any, retry: number = 0, paren
                 await addComment(resp.data.number, client, `Unable to assign user @${issue.Assignee}. If able, self-assign, otherwise tag @damccorm so that he can assign you. Because of GitHub's spam prevention system, your activity is required to enable assignment in this repo.`, 0);
             }
             fs.appendFileSync(mappingFile, `${resp.data.number}: ${issue.JiraReferenceId}\n`);
+
+            if (issue.State === 'closed') {
+                await closeIssue(resp.data.number, client, 0);
+            }
             try {
                 await addMapping(resp.data.number, issue.JiraReferenceId)
             } catch {

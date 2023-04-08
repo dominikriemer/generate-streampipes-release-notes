@@ -263,6 +263,7 @@ function getLabel(l): string {
             return "good first issue"
         case "features":
         case "improvement":
+        case "new feature":
             return "enhancement"
         case "gsoc2021":
             return "gsoc"
@@ -277,7 +278,7 @@ function jiraToGhIssue(jira: any): GhIssue {
     issue.Title = jira['Summary'];
 
     issue.Labels.add(jira['Issue Type'].toLowerCase());
-    issue.Labels.add(jira['Priority'].toUpperCase());
+    //issue.Labels.add(jira['Priority'].toUpperCase());
     issue.Labels.add('migrated from jira');
     for (let i = 0; i < 10; i++) {
         if (validLabel(jira[`Component${i}`])) {
@@ -302,6 +303,7 @@ function jiraToGhIssue(jira: any): GhIssue {
     issue.JiraReferenceId = jira['Issue id']
 
     issue.Assignable = isAssignable(issue.Assignee, mapAssigneeToHandle(jira['Assignee']));
+    issue.State = mapIssueState(jira['Status']);
 
     return issue;
 }
@@ -317,6 +319,20 @@ export function jirasToGitHubIssues(jiras: any[]): GhIssue[] {
     }
 
     return issues
+}
+
+function mapIssueState(jiraState: string): string {
+    switch(jiraState) {
+        case "Open":
+        case "In Progress":
+        case "Reopened":
+            return "open";
+        case "Resolved":
+        case "Closed":
+            return "closed";
+    }
+
+    return "open";
 }
 
 function mapAssigneeToHandle(assignee: string): string {
