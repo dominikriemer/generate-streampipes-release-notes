@@ -39,7 +39,7 @@ export async function downloadIssues(githubToken: string) {
     {
       owner: 'apache',
       repo: 'streampipes',
-      milestone: '2',
+      milestone: '5',
       state: 'closed',
     }
   );
