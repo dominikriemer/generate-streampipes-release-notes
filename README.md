@@ -10,3 +10,9 @@ To use the tool:
 4. Set the id of the GitHub milestone that should be used for generating the release note as environment variable `MILESTONE_ID`: `export MILESTONE_ID=<ID>`. This id can be extracted from the URL when viewing the milestone in GitHub.
 5. Run `npm install`
 6. Run `npm run exec`
+
+**To save the result to a file**:  
+     You can pipe the output to a file by appending `> filename.txt` to the command. For example:  
+```bash
+npm run exec > release-notes.txt
+```  
